@@ -1,0 +1,23 @@
+sudo: required
+
+services:  
+  - docker
+
+before_install: 
+  - docker build -t imonhaque/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true imonhaque/react-test npm run test
+
+after_success:
+  - docker build -t imonhaque/multi-client ./client
+  - docker build -t imonhaque/multi-nginx ./nginx
+  - docker build -t imonhaque/multi-server ./server
+  - docker build -t imonhaque/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push imonhaque/multi-client
+  - docker push imonhaque/multi-nginx
+  - docker push imonhaque/multi-server
+  - docker push imonhaque/multi-worker
